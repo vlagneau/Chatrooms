@@ -27,5 +27,7 @@ public class Users {
 		return _listeUsers.contains(user);
 	}
 	
-	
+	public void findUser(String pseudo, String password){
+		// TODO méthode findUser
+	}
 }
