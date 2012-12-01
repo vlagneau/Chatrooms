@@ -4,12 +4,14 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class Chatroom {
+	private int _id;
 	private Set<Session> _sessions;
 	private String _nom;
 	
-	public Chatroom(String nom){
+	public Chatroom(Integer id, String nom){
 		_sessions = new HashSet<Session>(0);
 		_nom = nom;
+		_id = id;
 	}
 	
 	/**
@@ -30,5 +32,20 @@ public class Chatroom {
 		if(_sessions.contains(session)){
 			_sessions.remove(session);
 		}
+	}
+
+	/**
+	 * Fonction permettant de savoir si une Chatroom a bien un identifiant correspondant à celui passé en paramètre
+	 * @param idChatroom identifiant recherché
+	 * @return TRUE si c'est le cas, FALSE sinon
+	 */
+	public boolean hasId(Integer idChatroom) {
+		boolean retour = false;
+		
+		if(this._id == idChatroom){
+			retour = true;
+		}
+		
+		return retour;
 	}
 }

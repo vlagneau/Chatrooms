@@ -3,23 +3,42 @@ package message;
 import java.util.StringTokenizer;
 
 public class Message {
-	private String _identificateur;
-	private String _nature;
+	private Integer _identificateur;
+	private Integer _nature;
 	private String _donnees;
 	
 	
 	public Message(String message) {
 		StringTokenizer tokenizer = new StringTokenizer(message, Header.DELIMITEUR_CHAR);
 		
-		_identificateur = new String(tokenizer.nextToken());
-		_nature = new String(tokenizer.nextToken());
+		if(tokenizer.countTokens() == 3){
+			String id = tokenizer.nextToken();
+			
+			if(id != null && !id.equals("null")){
+				_identificateur = new Integer(id);
+			}
+			else{
+				_identificateur = -1;
+			}
+		}
+		else{
+			_identificateur = -1;
+		}
+		
+		_nature = new Integer(tokenizer.nextToken());
 		_donnees = new String(tokenizer.nextToken());
+	}
+	
+	public Message(Integer identificateur, Integer nature, String donnees){
+		_identificateur = identificateur;
+		_nature = nature;
+		_donnees = donnees;
 	}
 
 
 	@Override
 	public String toString() {
-		return Header.DELIMITEUR_CHAR + _identificateur + Header.DELIMITEUR_CHAR + _nature + Header.DELIMITEUR_CHAR + _donnees + Header.DELIMITEUR_CHAR;
+		return Header.DELIMITEUR_CHAR + _identificateur + Header.DELIMITEUR_CHAR + _nature + Header.DELIMITEUR_CHAR + _donnees + Header.DELIMITEUR_CHAR + "\n";
 	}
 	
 	/**
@@ -31,10 +50,10 @@ public class Message {
 		String retour = null;
 		switch (fieldNumber) {
 		case Header.IDENTIFICATEUR:
-			retour = _identificateur;
+			retour = _identificateur.toString();
 			break;
 		case Header.NATURE:
-			retour = _nature;
+			retour = _nature.toString();
 			break;
 		case Header.DONNEES:
 			retour = _donnees;
@@ -51,6 +70,24 @@ public class Message {
 	 * @return le nombre de champs sous forme d'integer
 	 */
 	public int getNbFields(){
-		return 3;
+		int cpt = 0;
+		
+		if(_identificateur != null){
+			cpt++;
+		}
+		if(_nature != null){
+			cpt++;
+		}
+		if(_donnees != ""){
+			cpt++;
+		}
+		
+		return cpt;
+	}
+	
+	public void modifierIdentificateur(Integer nouvelIdentificateur){
+		if(nouvelIdentificateur != null){
+			_identificateur = nouvelIdentificateur;
+		}
 	}
 }
