@@ -1,7 +1,10 @@
 package server;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
+
+import message.Message;
 
 public class Chatroom {
 	private int _id;
@@ -47,5 +50,17 @@ public class Chatroom {
 		}
 		
 		return retour;
+	}
+	
+	/**
+	 * Fonction permettant d'envoyer un message à l'ensemble des sessions de la chatroom
+	 * @param messageEnvoye message à transmettre
+	 */
+	public void transmettreMessage(Message messageEnvoye){
+		for (Iterator<Session> iteratorSession = _sessions.iterator(); iteratorSession.hasNext();) {
+			Session sessionTemp = iteratorSession.next();
+			
+			sessionTemp.envoyerMessage(messageEnvoye);
+		}
 	}
 }

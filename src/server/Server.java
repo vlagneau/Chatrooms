@@ -3,8 +3,9 @@ package server;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 import message.Message;
@@ -15,7 +16,7 @@ public class Server {
 	private static int identifiantChatroom = 0;
 	
 	private int _nbClients;
-	private Set<Chatroom> _chatrooms;
+	private Map<Integer, Chatroom> _chatrooms;
 	private Set<Session> _sessions;
 	private Users _users;
 	private ServerSocket _serverSocket;
@@ -43,7 +44,6 @@ public class Server {
 	 * @return FALSE si la session n'a pas pu joindre la chatroom, TRUE sinon
 	 */
 	public boolean joindreChatroom(Session session, Integer idChatroom){
-		// TODO méthode seJoindreAUneChatroom
 		Boolean retour = Boolean.FALSE;
 		
 		Chatroom chatroom = trouverChatroom(idChatroom);
@@ -63,7 +63,6 @@ public class Server {
 	 * @return FALSE si la session n'a pas se déconnecter de la chatroom, TRUE sinon
 	 */
 	public boolean quitterChatroom(Session session, Integer idChatroom){
-		// TODO méthode seJoindreAUneChatroom
 		Boolean retour = Boolean.FALSE;
 		
 		Chatroom chatroom = trouverChatroom(idChatroom);
@@ -84,16 +83,8 @@ public class Server {
 	private Chatroom trouverChatroom(Integer idChatroom) {
 		Chatroom retour = null;
 		
-		boolean trouve = false;
-		Iterator<Chatroom> iteratorChatrooms = _chatrooms.iterator();
-		
-		while(!trouve && iteratorChatrooms.hasNext()){
-			Chatroom chatroomTemp = iteratorChatrooms.next();
-			
-			if(chatroomTemp.hasId(idChatroom)){
-				trouve = true;
-				retour = chatroomTemp;
-			}
+		if(_chatrooms.containsKey(idChatroom)){
+			retour = _chatrooms.get(idChatroom);
 		}
 		
 		return retour;
@@ -105,11 +96,11 @@ public class Server {
 	public Server()
 	{
 		_nbClients = 0;
-		_chatrooms = new HashSet<Chatroom>(0);
+		_chatrooms = new HashMap<Integer, Chatroom>(0);
 		_sessions = new HashSet<Session>(0);
 		_users = chargerUsers();
 		
-		creerChatroom("test");
+		creerChatroom("Attente");
 		
 		try {
 			_serverSocket = new ServerSocket(DEFAULT_PORT);
@@ -145,7 +136,7 @@ public class Server {
 	private void creerChatroom(String nom) {
 		Chatroom chatroom = new Chatroom(identifiantChatroom, nom);
 		
-		_chatrooms.add(chatroom);
+		_chatrooms.put(identifiantChatroom, chatroom);
 		
 		identifiantChatroom++;
 	}
@@ -186,19 +177,23 @@ public class Server {
 		}
 	}
 	
+	/**
+	 * Fonction permettant d'envoyer un message à une chatroom dont l'identifiant est passé
+	 * en paramètres
+	 * @param idChatroom identifiant de la chatroom concernée
+	 * @param messageEnvoye message à transmettre à la chatroom
+	 */
+	public void envoyerMessageChatroom(Integer idChatroom, Message messageEnvoye) {
+		// on trouve la chatroom concernée et on lui fait transmettre le message
+		if(_chatrooms.containsKey(idChatroom)){
+			Chatroom chatroom = _chatrooms.get(idChatroom);
+			
+			chatroom.transmettreMessage(messageEnvoye);
+		}
+	}
+	
 	public static void main(String arg[])
 	{
 		Server s = new Server();
-	}
-
-	
-	public void envoyerMessageChatroom(Message messageEnvoye) {
-		// TODO Auto-generated method stub
-		for (Iterator<Session> iterator = _sessions.iterator(); iterator.hasNext();) {
-			Session session = iterator.next();
-			
-			session.envoyerMessage(messageEnvoye);
-			
-		}
 	}
 }

@@ -90,10 +90,12 @@ public class Session {
 	private void joindreChatroom(String idChatroom){
 		Boolean reussite = Boolean.FALSE;
 		
+		// tentative de rejoindre une chatroom
 		if(idChatroom != null && !idChatroom.equals("")){
 			reussite = _server.joindreChatroom(this, new Integer(idChatroom));
 		}
 		
+		// génération du message retourné (réussite ou echec)
 		Message messageRetour = null;
 		
 		if(reussite){
@@ -112,13 +114,14 @@ public class Session {
 	 * @param idChatroom nom de la chatroom concernée
 	 */
 	private void quitterChatroom(String idChatroom){
-		// TODO méthode quitterChatroom
 		Boolean reussite = Boolean.FALSE;
 		
+		// tentative de quitter la chatroom
 		if(idChatroom != null && !idChatroom.equals("")){
 			reussite = _server.quitterChatroom(this, new Integer(idChatroom));
 		}
 		
+		// génération du message retourné (réussite ou echec)
 		Message messageRetour = null;
 		
 		if(reussite){
@@ -132,15 +135,23 @@ public class Session {
 	}
 	
 	/**
-	 * Fonction permettant d'envoyer un message 
-	 * @param texte
+	 * Fonction permettant d'envoyer un message depuis le client vers le serveur (pour une chatroom précise)
+	 * @param texte texte à transmettre à la chatroom
 	 */
 	private void transmettreMessageTexte(String texte){
 		if(texte != null && !texte.equals("")){
-			String nouveauTexte = _chatter.getPseudo() + " dit : " + texte;
+			// récupération de la chatroom concernée par le message, ainsi que le texte à transmettre
+			StringTokenizer tokenizer = new StringTokenizer(texte, Header.DELIMITEUR_CHATROOM);
+			
+			String identifiantChatroom = tokenizer.nextToken();
+			String texteInitial = tokenizer.nextToken();
+			
+			// création du texte envoyé au serveur
+			String nouveauTexte = _chatter.getPseudo() + " dit : " + texteInitial;
 			Message messageEnvoye = new Message(_identifiant, Header.CODE_NATURE_TEXTE, nouveauTexte);
 			
-			_server.envoyerMessageChatroom(messageEnvoye);
+			// envoi du texte sur le serveur pour la chatroom concernée
+			_server.envoyerMessageChatroom(new Integer(identifiantChatroom), messageEnvoye);
 		}
 	}
 
@@ -164,20 +175,22 @@ public class Session {
 						String donneesMessageRecu = messageRecu.getField(Header.DONNEES);
 
 						switch (natureMessageRecu) {
-							// s'il s'agit d'un message d'identification
-							case Header.CODE_NATURE_IDENTIFICATION:
-								demandeIdentification(donneesMessageRecu);
-								break;
-							
 							// s'il s'agit d'un message texte
 							case Header.CODE_NATURE_TEXTE:
 								transmettreMessageTexte(donneesMessageRecu);
 								break;
-								
+							
+							// s'il s'agit d'un message d'identification
+							case Header.CODE_NATURE_IDENTIFICATION:
+								demandeIdentification(donneesMessageRecu);
+								break;
+						
+							// s'il s'agit d'une connexion à une chatroom
 							case Header.CODE_NATURE_CONNEXION_CHATROOM:
 								joindreChatroom(donneesMessageRecu);
 								break;
 							
+							// s'il s'agit d'une déconnexion de chatroom
 							case Header.CODE_NATURE_DECONNEXION_CHATROOM:
 								quitterChatroom(donneesMessageRecu);
 								break;	

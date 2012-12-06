@@ -55,12 +55,16 @@ public class Client {
 	}
 	
 	/**
-	 * Fonction permettant d'envoyer un message texte dans le flux de sortie (vers la session)
+	 * Fonction permettant d'envoyer un message texte dans le flux de sortie (vers la session) pour une chatroom
+	 * dont l'identifiant à été passé en paramètre
+	 * @param idChatroom identifiant de la chatroom dans laquelle envoyer le message
 	 * @param message message texte à envoyer
 	 */
-	public void envoyerTexte(String message){
-		if(_socket.isConnected()){
-			Message messageEnvoye = new Message(null, Header.CODE_NATURE_TEXTE, message);
+	public void envoyerTexte(Integer idChatroom, String message){
+		if(_socket.isConnected() && idChatroom != null){
+			String nouveauMessage = idChatroom + Header.DELIMITEUR_CHATROOM + message;
+			
+			Message messageEnvoye = new Message(null, Header.CODE_NATURE_TEXTE, nouveauMessage);
 			
 			// envoi du message
 			envoyerMessage(messageEnvoye);
@@ -173,9 +177,9 @@ public class Client {
 		    	client.seConnecter("lagneau", "azer");
 		    	
 		    	client.seConnecterChatroom(0);
-		    	client.seDeconnecterChatroom(0);
+//		    	client.seDeconnecterChatroom(0);
 		    	
-//		    	client.envoyerTexte("Coucou!");
+		    	client.envoyerTexte(0, "Coucou!");
 		    	
 		     }
 		     

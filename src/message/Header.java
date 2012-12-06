@@ -3,6 +3,7 @@ package message;
 public class Header {
 	public static final String DELIMITEUR_CHAR = "#";
 	public static final String DELIMITEUR_DONNES = "%";
+	public static final String DELIMITEUR_CHATROOM = "§";
 	
 	public static final int IDENTIFIANT_SERVEUR = 0;
 	
@@ -20,18 +21,11 @@ public class Header {
 	public static final int CODE_NATURE_DECONNEXION_CHATROOM_OK = 401;
 	public static final int CODE_NATURE_DECONNEXION_CHATROOM_KO = 402;
 	
+	public static final int CODE_NATURE_DECONNEXION_SERVEUR = 50;
+	public static final int CODE_NATURE_DECONNEXION_SERVEUR_OK = 501;
+	public static final int CODE_NATURE_DECONNEXION_SERVEUR_KO = 502;
+	
 	public static final int IDENTIFICATEUR = 0;
 	public static final int NATURE = 1;
 	public static final int DONNEES = 2;
-	
-	public static int convertCommand(String command){
-		int retour = -1;
-
-		switch (command) {
-		default:
-			break;
-		}
-		
-		return retour;
-	}
 }
