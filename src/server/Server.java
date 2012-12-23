@@ -5,9 +5,11 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import message.Header;
 import message.Message;
 
 public class Server {
@@ -20,6 +22,32 @@ public class Server {
 	private Set<Session> _sessions;
 	private Users _users;
 	private ServerSocket _serverSocket;
+	
+	/**
+	 * Lancement du serveur
+	 */
+	public Server()
+	{
+		_nbClients = 0;
+		_chatrooms = new HashMap<Integer, Chatroom>(0);
+		_sessions = new HashSet<Session>(0);
+		_users = chargerUsers();
+		
+		creerChatroom("Attente");
+		
+		try {
+			_serverSocket = new ServerSocket(DEFAULT_PORT);
+			
+			System.out.println("SERVER : Serveur lancé");
+			
+			AcceptorThread acceptor = new AcceptorThread(this);
+			new Thread(acceptor).start();
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 	
 	/**
 	 * Fonction permttant de trouver  si un User identifié par le couple pseudo / password
@@ -35,6 +63,17 @@ public class Server {
 		retour = _users.isRegistered(user);
 		
 		return retour;
+	}
+	
+	/**
+	 * Fonction permettant d'ajouter un user à la liste des users du serveur
+	 * @param pseudo pseudo du user concerné
+	 * @param password mot de pase du user concerné
+	 */
+	public void addUser(String pseudo, String password){
+		User user = new User(pseudo, password);
+		
+		_users.addUser(user);
 	}
 	
 	/**
@@ -91,32 +130,6 @@ public class Server {
 	}
 
 	/**
-	 * Lancement du serveur
-	 */
-	public Server()
-	{
-		_nbClients = 0;
-		_chatrooms = new HashMap<Integer, Chatroom>(0);
-		_sessions = new HashSet<Session>(0);
-		_users = chargerUsers();
-		
-		creerChatroom("Attente");
-		
-		try {
-			_serverSocket = new ServerSocket(DEFAULT_PORT);
-			
-			System.out.println("SERVER : Serveur lancé");
-			
-			AcceptorThread acceptor = new AcceptorThread(this);
-			new Thread(acceptor).start();
-			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	
-	/**
 	 * Fonction permettant de charger la liste des users connus du serveur
 	 * @return la liste des users sous forme de Users
 	 */
@@ -133,12 +146,115 @@ public class Server {
 	 * Fonction permettant de créer une chatroom sur le serveur
 	 * @param nom nom de la chatroom
 	 */
-	private void creerChatroom(String nom) {
+	public void creerChatroom(String nom) {
 		Chatroom chatroom = new Chatroom(identifiantChatroom, nom);
 		
 		_chatrooms.put(identifiantChatroom, chatroom);
 		
 		identifiantChatroom++;
+		
+		miseAJourListeChatroomClients();
+	}
+	
+	/**
+	 * Fonction permettant de supprimer une chatroom du serveur
+	 * @param idChatroom identifiant de la chatroom concernée
+	 */
+	public void supprimerChatroom(Integer idChatroom) {
+		Chatroom chatroom = _chatrooms.get(idChatroom);
+		
+		if(chatroom != null){
+			_chatrooms.remove(idChatroom);
+			
+			chatroom.fermetureChatroom();
+		}
+		
+		miseAJourListeChatroomClients();
+	}
+	
+	/**
+	 * Fonction permettant d'envoyer un message à toutes les sessions connectées afin de leur indiquer
+	 * l'ensemble des chatrooms disponibles sur le serveur
+	 */
+	public void miseAJourListeChatroomClients(){
+		Message messageListe = obtenirMessageListeChatrooms();
+		
+		// envoi du message à toutes les sessions connectées au serveur
+		for (Iterator<Session> iteratorSession = _sessions.iterator(); iteratorSession.hasNext();) {
+			Session sessionTemp = iteratorSession.next();
+			
+			sessionTemp.envoyerMessage(messageListe);			
+		}
+	}
+	
+	/**
+	 * Fonction permettant d'obtenir le message contenant la liste des chatrooms ouvertes
+	 * sur le serveur
+	 * @return le message formaté contenant la liste des chatrooms
+	 */
+	public Message obtenirMessageListeChatrooms(){
+		StringBuffer listeChatrooms = new StringBuffer("");
+		
+		boolean premier = true;
+		
+		// création de la liste des chatrooms
+		for (Iterator<Chatroom> iteratorChatrooms = _chatrooms.values().iterator(); iteratorChatrooms.hasNext();) {
+			Chatroom chatroomTemp = iteratorChatrooms.next();
+
+			if(!premier){
+				listeChatrooms.append(Header.DELIMITEUR_CHATROOM);
+			}
+			else{
+				premier = false;
+			}
+			
+			listeChatrooms.append(chatroomTemp.get_id() + Header.DELIMITEUR_DONNES + chatroomTemp.get_nom());
+		}
+		
+		// création du message transmettant la liste des chatrooms
+		Message messageListe = new Message(Header.IDENTIFIANT_SERVEUR, Header.CODE_NATURE_LISTE_CHATROOMS, listeChatrooms.toString());
+		
+		return messageListe;
+	}
+	
+	/**
+	 * Fonction permettant d'envoyer un message à une chatroom dont l'identifiant est passé
+	 * en paramètres
+	 * @param idChatroom identifiant de la chatroom concernée
+	 * @param messageEnvoye message à transmettre à la chatroom
+	 */
+	public void envoyerMessageChatroom(Integer idChatroom, Message messageEnvoye) {
+		// on trouve la chatroom concernée et on lui fait transmettre le message
+		if(_chatrooms.containsKey(idChatroom)){
+			Chatroom chatroom = _chatrooms.get(idChatroom);
+			
+			chatroom.transmettreMessage(messageEnvoye);
+		}
+	}
+	
+	public void suppressionSession(Session session){
+		if(_sessions.contains(session)){
+			_sessions.remove(session);
+			
+			_nbClients--;
+		}
+	}
+	
+	/**
+	 * Fonction permettant de déconnecter une session de toutes les chatrooms auxquelles elle est connectée
+	 * @param session session concernée
+	 */
+	public void quitterToutesChatroom(Session session) {
+		Set<Chatroom> setChatroom = new HashSet<Chatroom>(_chatrooms.values());
+		
+		for (Iterator<Chatroom> iteratorChatroom = setChatroom.iterator(); iteratorChatroom.hasNext();) {
+			Chatroom chatroom = iteratorChatroom.next();
+			
+			if(chatroom.isSessionConnected(session)){
+				chatroom.deconnexion(session);
+			}
+			
+		}
 	}
 
 	/**
@@ -174,21 +290,6 @@ public class Server {
 					e.printStackTrace();
 				}
 			}
-		}
-	}
-	
-	/**
-	 * Fonction permettant d'envoyer un message à une chatroom dont l'identifiant est passé
-	 * en paramètres
-	 * @param idChatroom identifiant de la chatroom concernée
-	 * @param messageEnvoye message à transmettre à la chatroom
-	 */
-	public void envoyerMessageChatroom(Integer idChatroom, Message messageEnvoye) {
-		// on trouve la chatroom concernée et on lui fait transmettre le message
-		if(_chatrooms.containsKey(idChatroom)){
-			Chatroom chatroom = _chatrooms.get(idChatroom);
-			
-			chatroom.transmettreMessage(messageEnvoye);
 		}
 	}
 	

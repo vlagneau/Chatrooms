@@ -54,6 +54,16 @@ public class Client {
 		}
 	}
 	
+	public void envoyerInscription(String pseudo, String password){
+		if(_socket.isConnected()){
+			String donnees = pseudo + Header.DELIMITEUR_DONNES + password;
+			Message messageConnexion = new Message(null, Header.CODE_NATURE_INSCRIPTION, donnees);
+			
+			// envoi du message de connexion
+			envoyerMessage(messageConnexion);
+		}
+	}
+	
 	/**
 	 * Fonction permettant d'envoyer un message texte dans le flux de sortie (vers la session) pour une chatroom
 	 * dont l'identifiant à été passé en paramètre
@@ -107,23 +117,65 @@ public class Client {
 	}
 	
 	/**
-	 * Fonction permettant d'arrêter le thread d'écoute
+	 * Fonction permettant de créer une chatroom sur le serveur
+	 * @param nomChatroom nom de la chatroom à créer
 	 */
-	public void arreterEcoute(){
-		_threadEcoute.interrupt();
+	public void creationChatroom(String nomChatroom){
+		if(_socket.isConnected()){
+			Message messageEnvoye = new Message(null, Header.CODE_NATURE_CREATION_CHATROOM, nomChatroom);
+			
+			envoyerMessage(messageEnvoye);
+		}
+	}
+	
+	/**
+	 * Fonction permettant de quitter une chatroom à laquelle le serveur est connecté
+	 * @param idChatroom identifiant de chatroom
+	 */
+	public void suppressionChatroom(String idChatroom){
+		if(_socket.isConnected()){
+			Message messageEnvoye = new Message(null, Header.CODE_NATURE_SUPPRESSION_CHATROOM, idChatroom);
+			
+			envoyerMessage(messageEnvoye);
+		}
+	}
+	
+	/**
+	 * Fonction permettant d'arrêter le client proprement en fermant notamment le socket
+	 */
+	public void arreterClient(){
+		try {
+//			deconnexionClient();
+//			finClient();
+			_socket.close();
+			
+			System.out.println("Arrêt du client");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Fonction permettant de déconnecter le client (retour à une session non connectée au serveur)
+	 */
+	public void deconnexionClient(){
+		if(_socket.isConnected()){
+			Message messageDeconnexion = new Message(null, Header.CODE_NATURE_DECONNEXION_SERVEUR, "-1");
+			
+			envoyerMessage(messageDeconnexion);
+		}
 	}
 	
 	/**
 	 * Thread d'écoute du flux entrant du socket (messages issus de la session)
 	 */
 	private class SessionToClient implements Runnable{
-		private Client _client;
 		private BufferedReader _in;
 		
 		// création du thread, récupération du flux entrant du socket
 		public SessionToClient(Client client){
 			super();
-			_client = client;
 			
 			try {
 				_in = new BufferedReader(new InputStreamReader(_socket.getInputStream()));
@@ -154,6 +206,30 @@ public class Client {
 						if(messageRecu.getField(Header.NATURE).equals("" + Header.CODE_NATURE_DECONNEXION_CHATROOM_OK)){
 							System.out.println("Déconnexion à la chatroom OK");
 						}
+						
+						if(messageRecu.getField(Header.NATURE).equals("" + Header.CODE_NATURE_CREATION_CHATROOM_OK)){
+							System.out.println("Création de la chatroom OK");
+						}
+						
+						if(messageRecu.getField(Header.NATURE).equals("" + Header.CODE_NATURE_CREATION_CHATROOM_KO)){
+							System.out.println("Création de la chatroom KO");
+						}
+						
+						if(messageRecu.getField(Header.NATURE).equals("" + Header.CODE_NATURE_SUPPRESSION_CHATROOM_OK)){
+							System.out.println("Suppression de la chatroom OK");
+						}
+						
+						if(messageRecu.getField(Header.NATURE).equals("" + Header.CODE_NATURE_SUPPRESSION_CHATROOM_KO)){
+							System.out.println("Suppression de la chatroom KO");
+						}
+						
+						if(messageRecu.getField(Header.NATURE).equals("" + Header.CODE_NATURE_LISTE_CHATROOMS)){
+							System.out.println(messageRecu.getField(Header.DONNEES));
+						}
+						
+						if(messageRecu.getField(Header.NATURE).equals("" + Header.CODE_NATURE_LISTE_USERS_CHATROOMS)){
+							System.out.println(messageRecu.getField(Header.DONNEES));
+						}
 					}
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
@@ -161,7 +237,6 @@ public class Client {
 				}
 			}
 		}
-		
 	}
 
 	public static void main(String[] args) {
@@ -169,22 +244,30 @@ public class Client {
 
 		try {
 		
-		     socket = new Socket(InetAddress.getLocalHost(),Server.DEFAULT_PORT);
-		     
+			socket = new Socket(InetAddress.getLocalHost(),Server.DEFAULT_PORT);
+//			InetAddress test = InetAddress.getByName("192.168.4.138");
+//			
+//			socket = new Socket(test,Server.DEFAULT_PORT); 
+			
 		     if(socket.isConnected()){
 		    	Client client = new Client(socket);
-		    	 
+		    	socket = null;
+//		    	client.envoyerInscription("toto", "azer"); 
 		    	client.seConnecter("lagneau", "azer");
 		    	
 		    	client.seConnecterChatroom(0);
 //		    	client.seDeconnecterChatroom(0);
 		    	
+		    	client.creationChatroom("test");
+		    	client.creationChatroom("test2");
+		    	
+		    	client.suppressionChatroom("1");
+		    	
 		    	client.envoyerTexte(0, "Coucou!");
 		    	
+//		    	client.arreterClient();
 		     }
 		     
-//		     socket.close();
-
 		}catch (UnknownHostException e) {
 			e.printStackTrace();
 		}catch (IOException e) {

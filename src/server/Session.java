@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.StringTokenizer;
 
 import message.Header;
@@ -18,6 +19,11 @@ public class Session {
 	private PrintWriter _out;
 	private BufferedReader _in;
 	private Server _server;
+	private Boolean _isConnected;
+
+	public Chatter get_chatter() {
+		return _chatter;
+	}
 	
 	/**
 	 * Lancement d'une session
@@ -31,10 +37,14 @@ public class Session {
 		_server = server;
 		_socket = socket;
 		_chatter = chatter;
+		_isConnected = Boolean.FALSE;
 		
 		// création des flux entrants et sortants
 		try {
 			_out = new PrintWriter(_socket.getOutputStream());
+			
+			envoyerMessage(_server.obtenirMessageListeChatrooms());
+			
 			_in = new BufferedReader(new InputStreamReader(_socket.getInputStream()));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -45,6 +55,12 @@ public class Session {
 		new Thread(new ClientToSession()).start();
 	}
 	
+	@Override
+	protected void finalize() throws Throwable {
+		super.finalize();
+		System.out.println("SESSION : DESTRUCTEUR SESSION");
+	}
+
 	/**
 	 * Fonction demandant au serveur d'identifier un User grâce aux données issus d'un message
 	 * de demande d'identification client
@@ -62,6 +78,7 @@ public class Session {
 		
 		if(userFound){
 			_chatter = new Chatter(pseudo);
+			_isConnected = Boolean.TRUE;
 			
 			messageRetour = new Message(Header.IDENTIFIANT_SERVEUR, Header.CODE_NATURE_IDENTIFICATION_OK, "-1");
 		}
@@ -71,6 +88,33 @@ public class Session {
 		
 		// envoi du message
 		envoyerMessage(messageRetour);
+	}
+	
+	/**
+	 * Fonction permettant d'ajouter un user à la liste des users du serveur grâce aux données
+	 * du message d'inscription reçu par la session
+	 * @param donnees données à partir desquelles seront extraites le pseudo et le mot de passe
+	 */
+	private void inscriptionUser(String donnees) {
+		// découpage des informations des données
+		StringTokenizer stringTokenizer = new StringTokenizer(donnees, Header.DELIMITEUR_DONNES);
+		String pseudo = stringTokenizer.nextToken();
+		String password = stringTokenizer.nextToken();
+		
+		_server.addUser(pseudo, password);
+	}
+	
+	/**
+	 * Fonction permettant de déconnecter l'utilisateur du serveur et des chatrooms dans lequel il
+	 * était connecté
+	 */
+	private void deconnexionServeur(){
+		if(_isConnected){
+			_chatter = new Chatter();
+			_isConnected = Boolean.FALSE;
+			
+			_server.quitterToutesChatroom(this);
+		}
 	}
 	
 	/**
@@ -135,6 +179,76 @@ public class Session {
 	}
 	
 	/**
+	 * Fonction permettant à un client de créer une chatroom
+	 * @param nomChatroom nom de la chatroom à créer
+	 */
+	private void creerChatroom(String nomChatroom){
+		Boolean reussite = Boolean.FALSE;
+		
+		if(nomChatroom != null && !nomChatroom.equals("")){
+			_server.creerChatroom(nomChatroom);
+			reussite = Boolean.TRUE;
+		}
+		
+		// génération du message retourné (réussite ou echec)
+		Message messageRetour = null;
+
+		if(reussite){
+			messageRetour = new Message(Header.IDENTIFIANT_SERVEUR, Header.CODE_NATURE_CREATION_CHATROOM_OK, "-1");
+		}
+		else{
+			messageRetour = new Message(Header.IDENTIFIANT_SERVEUR, Header.CODE_NATURE_CREATION_CHATROOM_KO, "-1");
+		}
+
+		envoyerMessage(messageRetour);
+	}
+	
+	/**
+	 * Fonction permettant à un client de supprimer une chatroom
+	 * @param idChatroom identifiant de la chatroom à créer
+	 */
+	private void supprimerChatroom(String idChatroom){
+		Boolean reussite = Boolean.FALSE;
+		
+		if(idChatroom != null && !idChatroom.equals("")){
+			_server.supprimerChatroom(new Integer(idChatroom));
+			reussite = Boolean.TRUE;
+		}
+		
+		// génération du message retourné (réussite ou echec)
+		Message messageRetour = null;
+
+		if(reussite){
+			messageRetour = new Message(Header.IDENTIFIANT_SERVEUR, Header.CODE_NATURE_SUPPRESSION_CHATROOM_OK, "-1");
+		}
+		else{
+			messageRetour = new Message(Header.IDENTIFIANT_SERVEUR, Header.CODE_NATURE_SUPPRESSION_CHATROOM_KO, "-1");
+		}
+
+		envoyerMessage(messageRetour);
+	}
+	
+	/**
+	 * Fonction permettant d'indiquer au serveur que le client s'arrête et que la session est supprimée
+	 */
+	private void terminerSession() {
+		_server.suppressionSession(this);
+		try {
+			_socket.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		try {
+			finalize();
+		} catch (Throwable e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	/**
 	 * Fonction permettant d'envoyer un message depuis le client vers le serveur (pour une chatroom précise)
 	 * @param texte texte à transmettre à la chatroom
 	 */
@@ -161,51 +275,79 @@ public class Session {
 	private class ClientToSession implements Runnable{
 		@Override
 		public void run() {
+			String messageClient = null;
+			
 			// tant que le socket n'est pas fermé, on écoute et on récupère les messages du flux entrant (socket in)
-			while(!_socket.isClosed()){
-				try {
-					// réception d'un message du client
-					if(_in.ready()){
-						String messageClient = _in.readLine();
-						
-						// découpe du message client
-						Message messageRecu = new Message(messageClient);
-						
-						Integer natureMessageRecu = new Integer(messageRecu.getField(Header.NATURE));
-						String donneesMessageRecu = messageRecu.getField(Header.DONNEES);
+			try {
+				// réception d'un message du client
 
-						switch (natureMessageRecu) {
-							// s'il s'agit d'un message texte
-							case Header.CODE_NATURE_TEXTE:
-								transmettreMessageTexte(donneesMessageRecu);
-								break;
-							
-							// s'il s'agit d'un message d'identification
-							case Header.CODE_NATURE_IDENTIFICATION:
-								demandeIdentification(donneesMessageRecu);
-								break;
+				while(!_socket.isClosed() && (messageClient = _in.readLine()) != null){
+
+					// découpe du message client
+					Message messageRecu = new Message(messageClient);
+
+					Integer natureMessageRecu = new Integer(messageRecu.getField(Header.NATURE));
+					String donneesMessageRecu = messageRecu.getField(Header.DONNEES);
+
+					switch (natureMessageRecu) {
+					// s'il s'agit d'un message texte
+					case Header.CODE_NATURE_TEXTE:
+						transmettreMessageTexte(donneesMessageRecu);
+						break;
+
+						// s'il s'agit d'un message d'identification
+					case Header.CODE_NATURE_IDENTIFICATION:
+						demandeIdentification(donneesMessageRecu);
+						break;
+
+						// s'il s'agit d'un message de déconnexion du chatter
+					case Header.CODE_NATURE_DECONNEXION_SERVEUR:
+						deconnexionServeur();
+						break;
+
+						// s'il s'agit d'une connexion à une chatroom
+					case Header.CODE_NATURE_CONNEXION_CHATROOM:
+						joindreChatroom(donneesMessageRecu);
+						break;
+
+						// s'il s'agit d'une déconnexion de chatroom
+					case Header.CODE_NATURE_DECONNEXION_CHATROOM:
+						quitterChatroom(donneesMessageRecu);
+						break;	
+
+						// s'il s'agit d'une déconnexion de chatroom
+					case Header.CODE_NATURE_CREATION_CHATROOM:
+						creerChatroom(donneesMessageRecu);
+						break;	
+
+						// s'il s'agit d'une déconnexion de chatroom
+					case Header.CODE_NATURE_SUPPRESSION_CHATROOM:
+						supprimerChatroom(donneesMessageRecu);
+						break;
+
+						// s'il s'agit d'une déconnexion de chatroom
+					case Header.CODE_NATURE_INSCRIPTION:
+						inscriptionUser(donneesMessageRecu);
+						break;	
 						
-							// s'il s'agit d'une connexion à une chatroom
-							case Header.CODE_NATURE_CONNEXION_CHATROOM:
-								joindreChatroom(donneesMessageRecu);
-								break;
-							
-							// s'il s'agit d'une déconnexion de chatroom
-							case Header.CODE_NATURE_DECONNEXION_CHATROOM:
-								quitterChatroom(donneesMessageRecu);
-								break;	
-								
-							default:
-								break;
-						}
+					default:
+						break;
 					}
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
 				}
+			} catch(SocketException se){
+				//se.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 			
-			System.out.println("sortie session");
+			if(_isConnected){
+				deconnexionServeur();
+			}
+
+			terminerSession();
+			
+			System.out.println("SESSION : session terminée");
 		}
 	}
 }
