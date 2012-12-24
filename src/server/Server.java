@@ -3,7 +3,6 @@ package server;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -11,6 +10,7 @@ import java.util.Set;
 
 import message.Header;
 import message.Message;
+import serialization.SerializationMain;
 
 public class Server {
 	public final static int DEFAULT_PORT = 8080;
@@ -29,12 +29,21 @@ public class Server {
 	public Server()
 	{
 		_nbClients = 0;
-		_chatrooms = new HashMap<Integer, Chatroom>(0);
+		_chatrooms = SerializationMain.deserializationChatrooms();
 		_sessions = new HashSet<Session>(0);
-		_users = chargerUsers();
+		_users = SerializationMain.deserializationUsers();
 		
-		creerChatroom("Attente");
+		if(_users == null){
+			_users = new Users();
+		}
 		
+		if(_chatrooms.size() == 0){
+			creerChatroom("Attente");
+		}
+		else{
+			identifiantChatroom = _chatrooms.size();
+		}
+
 		try {
 			_serverSocket = new ServerSocket(DEFAULT_PORT);
 			
@@ -47,6 +56,16 @@ public class Server {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	/**
+	 * Fonction de sauvegarde des informations du serveur
+	 */
+	private void seralizationServer(){
+		SerializationMain.serializationUsers(_users);
+		
+		Set<Chatroom> temp = new HashSet<Chatroom>(_chatrooms.values());
+		SerializationMain.serializationChatrooms(temp);
 	}
 	
 	/**
@@ -296,5 +315,6 @@ public class Server {
 	public static void main(String arg[])
 	{
 		Server s = new Server();
+//		s.seralizationServer();
 	}
 }

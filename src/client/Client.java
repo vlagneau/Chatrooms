@@ -145,8 +145,6 @@ public class Client {
 	 */
 	public void arreterClient(){
 		try {
-//			deconnexionClient();
-//			finClient();
 			_socket.close();
 			
 			System.out.println("Arrêt du client");

@@ -1,6 +1,9 @@
 package server;
 
-public class Chatter{
+import java.io.Serializable;
+
+public class Chatter implements Serializable{
+	private static final long serialVersionUID = 889602006666385057L;
 	protected String _pseudo;
 
 	// ------------------ GETTERS / SETTERS -----------------------

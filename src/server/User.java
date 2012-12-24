@@ -1,7 +1,10 @@
 package server;
 
+import java.io.Serializable;
 
-public class User extends Chatter{
+
+public class User extends Chatter implements Serializable{
+	private static final long serialVersionUID = 358622370398815350L;
 	private String _password;
 
 	public User(String pseudo, String password) {

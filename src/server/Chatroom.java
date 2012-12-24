@@ -1,5 +1,6 @@
 package server;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -9,10 +10,11 @@ import java.util.Set;
 import message.Header;
 import message.Message;
 
-public class Chatroom {
+public class Chatroom implements Serializable{
+	private static final long serialVersionUID = 6217556684005480920L;
 	private int _id;
-	private Set<Session> _sessions;
 	private String _nom;
+	transient private Set<Session> _sessions;
 	
 	public Chatroom(Integer id, String nom){
 		_sessions = new HashSet<Session>(0);
@@ -26,6 +28,13 @@ public class Chatroom {
 
 	public String get_nom() {
 		return _nom;
+	}
+	
+	/**
+	 * Fonction permettant de réinitialiser la liste des sessions connectées
+	 */
+	public void initSessions(){
+		_sessions = new HashSet<Session>(0);
 	}
 
 	/**

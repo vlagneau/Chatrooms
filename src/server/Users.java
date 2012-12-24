@@ -1,9 +1,12 @@
 package server;
 
+import java.io.Serializable;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
-public class Users {
+public class Users implements Serializable{
+	private static final long serialVersionUID = -2151350248846300349L;
 	private Set<User> _listeUsers;
 
 	public Users() {
@@ -27,7 +30,14 @@ public class Users {
 		return _listeUsers.contains(user);
 	}
 	
-	public void findUser(String pseudo, String password){
-		// TODO méthode findUser
+	/**
+	 * Fonction d'affichage de la liste des users
+	 */
+	public void afficherUsers(){
+		for (Iterator<User> iteratorUser = _listeUsers.iterator(); iteratorUser.hasNext();) {
+			User userTemp = iteratorUser.next();
+			
+			System.out.println(userTemp.getPseudo());
+		}
 	}
 }
