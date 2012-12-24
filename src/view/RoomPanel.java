@@ -23,13 +23,16 @@ public class RoomPanel extends JPanel {
     private javax.swing.JButton Supprimer_B;
     private javax.swing.JScrollPane jScrollPane1;
     
+    private RoomFrame _parent;
+    
     private Client _client;
     private String _login;
     
-	public RoomPanel(final Client client, final String login) {
+	public RoomPanel(final Client client, final String login, RoomFrame parent) {
 		initComponents();
 		_client = client;
 		_login = login;
+		_parent = parent;
 
 		miseAjourChatrooms(client._rooms.keySet());
 	}
@@ -80,16 +83,19 @@ public class RoomPanel extends JPanel {
 		            String room = list.getSelectedValue().toString();
 		            
 		            String id = _client._rooms.get(room);
+		            //on vérifie que l'on a pas ouverte la même salle
 		            if(!_client._openRooms.containsKey(id)) {
 		            	_client.seConnecterChatroom(new Integer(id));
 						ChatFrame chat = new ChatFrame(_client, _login, room, id);
 						_client._openRooms.put(id, true);
+						_parent.openRooms.add(chat);
 		            }
 		            if(_client._openRooms.containsKey(id)) {
 		            	if(!_client._openRooms.get(id)) {
 		            		_client.seConnecterChatroom(new Integer(id));
 							ChatFrame chat = new ChatFrame(_client, _login, room, id);
 							_client._openRooms.put(id, true);
+							_parent.openRooms.add(chat);
 		            	}
 		            }
 		        }

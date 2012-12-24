@@ -1,9 +1,15 @@
 package view;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.swing.JFrame;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
 import client.Client;
@@ -12,18 +18,62 @@ public class RoomFrame extends JFrame {
 	JPanel mainPanel;
 	
 	Client _client;
+	JMenuBar bar;
+	JMenuItem deco;
+	JMenuItem quitter;
+	
+	public Set<JFrame> openRooms;
+	
 	
 	public RoomFrame(Client client, String login) {
-		mainPanel = new RoomPanel(client, login);
+		openRooms = new HashSet<>();
+		mainPanel = new RoomPanel(client, login, this);
 		_client = client;
 		
+		bar = new JMenuBar();
+		deco = new JMenuItem("Déconnecter");
+		quitter = new JMenuItem("Quitter");
 		
+		deco.addActionListener(new RoomFrameMenuListener());
+		quitter.addActionListener(new RoomFrameMenuListener());
+		
+		bar.add(deco);
+		bar.add(quitter);
+		
+		
+		this.setJMenuBar(bar);
 		this.setTitle("Salles, " + login);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	    this.setSize(220, 240);
+	    this.setSize(220, 260);
 	    this.setLocationRelativeTo(null);               
 	    this.setContentPane(mainPanel);               
 	    this.setVisible(true);	
+	}
+	public void FermerSalles() {
+		for(JFrame frame : openRooms) {
+			frame.dispose();
+		}
+	}
+	
+	public class RoomFrameMenuListener implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			if(arg0.getSource() == deco) {
+				_client.deconnexionClient();
+				FermerSalles();
+				dispose();
+				
+				new LoginFrame();
+			}
+			else {
+				_client.arreterClient();
+				FermerSalles();
+				dispose();
+			}
+			
+		}
+		
 	}
 	
 	public class RoomFrameListener implements WindowListener {
