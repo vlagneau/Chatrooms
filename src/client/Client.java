@@ -7,15 +7,26 @@ import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
 
 import message.Header;
 import message.Message;
 import server.Server;
+import view.ChatPanel;
+import view.LoginPanel;
+import view.RoomPanel;
 
 public class Client {
 	private Socket _socket;
 	private PrintWriter _out;
 	private Thread _threadEcoute;
+	public Map<String, String> _rooms;
+	public Map<String, Boolean> _openRooms;
+	public Set<String> _users;
 
 	/**
 	 * Création du client, lancement du thread d'écoute
@@ -23,6 +34,10 @@ public class Client {
 	 */
 	public Client(Socket _socket) {
 		super();
+		_rooms = new HashMap<String, String>();
+		_openRooms = new HashMap<String, Boolean>();
+		_users = new HashSet<String>();
+		
 		this._socket = _socket;
 		
 		// si le socket est connecté au serveur, on lance le thread d'écoute et on ouvre le flux d'envoi
@@ -116,6 +131,7 @@ public class Client {
 		_out.flush();
 	}
 	
+	
 	/**
 	 * Fonction permettant de créer une chatroom sur le serveur
 	 * @param nomChatroom nom de la chatroom à créer
@@ -169,11 +185,13 @@ public class Client {
 	 * Thread d'écoute du flux entrant du socket (messages issus de la session)
 	 */
 	private class SessionToClient implements Runnable{
+		private Client _client;
 		private BufferedReader _in;
 		
 		// création du thread, récupération du flux entrant du socket
 		public SessionToClient(Client client){
 			super();
+			_client = client;
 			
 			try {
 				_in = new BufferedReader(new InputStreamReader(_socket.getInputStream()));
@@ -194,6 +212,7 @@ public class Client {
 						Message messageRecu = new Message(test);
 						
 						if(messageRecu.getField(Header.NATURE).equals("" + Header.CODE_NATURE_TEXTE)){
+							ChatPanel.getMessageFromClient(Header.CODE_NATURE_TEXTE, messageRecu.getField(Header.DONNEES) + "\n");
 							System.out.println(messageRecu.getField(Header.DONNEES));
 						}
 						
@@ -223,10 +242,25 @@ public class Client {
 						
 						if(messageRecu.getField(Header.NATURE).equals("" + Header.CODE_NATURE_LISTE_CHATROOMS)){
 							System.out.println(messageRecu.getField(Header.DONNEES));
+							_rooms = _client.getChatrooms(messageRecu.getField(Header.DONNEES));
+							RoomPanel.miseAjourChatrooms(_rooms.keySet());
 						}
 						
 						if(messageRecu.getField(Header.NATURE).equals("" + Header.CODE_NATURE_LISTE_USERS_CHATROOMS)){
 							System.out.println(messageRecu.getField(Header.DONNEES));
+							_users = _client.getUsers(messageRecu.getField(Header.DONNEES));
+							ChatPanel.miseAjourUsers(_users);
+							
+						}
+						
+						if(messageRecu.getField(Header.NATURE).equals("" + Header.CODE_NATURE_IDENTIFICATION_OK)){
+							System.out.println("Connexion serveur OK");
+							LoginPanel.getMessageFromClient(Header.CODE_NATURE_IDENTIFICATION_OK, "Connexion serveur OK");
+						}
+						
+						if(messageRecu.getField(Header.NATURE).equals("" + Header.CODE_NATURE_IDENTIFICATION_KO)){
+							System.out.println("Connexion serveur KO");
+							LoginPanel.getMessageFromClient(Header.CODE_NATURE_IDENTIFICATION_KO, "Connexion serveur KO");
 						}
 					}
 				} catch (IOException e) {
@@ -236,7 +270,51 @@ public class Client {
 			}
 		}
 	}
+	
+	/**
+	 * Fonction qui retourne un dictionnaire contenant les salles dispo sur Server
+	 * @param message
+	 * @return
+	 */
+	public Map<String, String> getChatrooms(String message) {
 
+		StringTokenizer token = new StringTokenizer(message, Header.DELIMITEUR_CHATROOM);
+		
+		Map<String, String> rooms = new HashMap<String, String>();
+		
+		while(token.hasMoreTokens()) {
+			
+			String room = token.nextToken();
+			StringTokenizer tokenRoom = new StringTokenizer(room, Header.DELIMITEUR_DONNES);
+			
+			String id = tokenRoom.nextToken();
+			String name = tokenRoom.nextToken();
+			rooms.put(name, id);
+		}
+		
+		return rooms;
+	}
+	
+	/**
+	 * Fonction qui retourne une liste d'utilisateurs de la chatroom
+	 * @param message
+	 * @return
+	 */
+	public Set<String> getUsers(String message) {
+		
+		StringTokenizer token = new StringTokenizer(message, Header.DELIMITEUR_DONNES);
+		Set<String> users = new HashSet<String>();
+		
+		while(token.hasMoreTokens()) {
+			
+			String user = token.nextToken();
+			users.add(user);
+		}
+		
+		return users;
+		
+	}
+	
 	public static void main(String[] args) {
 		Socket socket;
 
@@ -249,8 +327,7 @@ public class Client {
 			
 		     if(socket.isConnected()){
 		    	Client client = new Client(socket);
-		    	socket = null;
-//		    	client.envoyerInscription("toto", "azer"); 
+		    	 
 		    	client.seConnecter("lagneau", "azer");
 		    	
 		    	client.seConnecterChatroom(0);
@@ -262,10 +339,10 @@ public class Client {
 		    	client.suppressionChatroom("1");
 		    	
 		    	client.envoyerTexte(0, "Coucou!");
-		    	
-//		    	client.arreterClient();
 		     }
 		     
+//		     socket.close();
+
 		}catch (UnknownHostException e) {
 			e.printStackTrace();
 		}catch (IOException e) {

@@ -36,9 +36,9 @@ public class Header {
 	public static final int CODE_NATURE_SUPPRESSION_CHATROOM = 90;
 	public static final int CODE_NATURE_SUPPRESSION_CHATROOM_OK = 901;
 	public static final int CODE_NATURE_SUPPRESSION_CHATROOM_KO = 902;
-
-	public static final int CODE_NATURE_INSCRIPTION = 0;
 	
+	public static final int CODE_NATURE_INSCRIPTION = 0;
+		
 	public static final int IDENTIFICATEUR = 0;
 	public static final int NATURE = 1;
 	public static final int DONNEES = 2;
