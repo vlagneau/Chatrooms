@@ -64,9 +64,10 @@ public class RoomPanel extends JPanel {
 			if(e.getSource() == Supprimer_B) {
 				
 	            String room = Salles_L.getSelectedValue().toString();
-	            String id = _client._rooms.get(room);
-	            
-				_client.suppressionChatroom(id);
+	            if(!room.isEmpty() && !room.equals("Attente")) {
+		            String id = _client._rooms.get(room);
+					_client.suppressionChatroom(id);
+	            }
 			}
 			
 		}
