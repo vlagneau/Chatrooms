@@ -108,7 +108,7 @@ public class Session {
 	 * Fonction permettant de déconnecter l'utilisateur du serveur et des chatrooms dans lequel il
 	 * était connecté
 	 */
-	private void deconnexionServeur(){
+	public void deconnexionServeur(){
 		if(_isConnected){
 			_chatter = new Chatter();
 			_isConnected = Boolean.FALSE;
@@ -329,6 +329,11 @@ public class Session {
 					case Header.CODE_NATURE_INSCRIPTION:
 						inscriptionUser(donneesMessageRecu);
 						break;	
+						
+						// s'il s'agit d'un ordre d'extinction du serveur
+					case Header.CODE_NATURE_EXTINCTION_SERVEUR:
+						_server.arretServeur();
+						break;
 						
 					default:
 						break;

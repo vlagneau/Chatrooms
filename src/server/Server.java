@@ -3,6 +3,7 @@ package server;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -55,6 +56,53 @@ public class Server {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+	}
+	
+	@Override
+	protected void finalize() throws Throwable {
+		super.finalize();
+		System.out.println("SERVEUR : DESTRUCTEUR SERVEUR");
+	}
+	
+	/**
+	 * Fonction permettant d'arrêter proprement le serveur. Il coupe les connexions, sauvegarde les users et chatrooms avant de s'éteindre
+	 */
+	public void arretServeur(){
+		// deconnexions de toutes les sessions
+		for (Iterator<Session> iteratorSession = _sessions.iterator(); iteratorSession.hasNext();) {
+			Session sessionTemp = iteratorSession.next();
+			
+			sessionTemp.deconnexionServeur();
+		}
+		
+//		_sessions.clear();
+		
+		// serialisation des chatrooms et users du serveur
+		seralizationServer();
+		
+		// arrêt du serveur (thread + objet courant)
+		arretThreadConnexion();
+		
+		try {
+			finalize();
+		} catch (Throwable e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Fonction permettant de stopper le thread de reception de connexions
+	 */
+	private void arretThreadConnexion(){
+		if (!_serverSocket.isClosed()) {
+			try {
+				_serverSocket.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 	
@@ -304,6 +352,8 @@ public class Server {
 						Session session = new Session(_server, new Chatter(), socket);
 						_sessions.add(session);
 					}
+				} catch(SocketException se){
+					// rien
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

@@ -6,8 +6,6 @@ import java.awt.event.WindowListener;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import sun.awt.WindowClosingListener;
-
 import client.Client;
 
 public class ChatFrame extends JFrame {

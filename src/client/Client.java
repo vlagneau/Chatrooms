@@ -69,13 +69,18 @@ public class Client {
 		}
 	}
 	
+	/**
+	 * Fonction permettant d'envoyer un message d'inscription au serveur
+	 * @param pseudo pseudo avec lequel se connecter
+	 * @param password mot de passe associé au pseudo pour s'identifier
+	 */
 	public void envoyerInscription(String pseudo, String password){
 		if(_socket.isConnected()){
 			String donnees = pseudo + Header.DELIMITEUR_DONNES + password;
-			Message messageConnexion = new Message(null, Header.CODE_NATURE_INSCRIPTION, donnees);
+			Message messageInscription = new Message(null, Header.CODE_NATURE_INSCRIPTION, donnees);
 			
-			// envoi du message de connexion
-			envoyerMessage(messageConnexion);
+			// envoi du message d'inscription
+			envoyerMessage(messageInscription);
 		}
 	}
 	
@@ -89,7 +94,17 @@ public class Client {
 		if(_socket.isConnected() && idChatroom != null){
 			String nouveauMessage = idChatroom + Header.DELIMITEUR_CHATROOM + message;
 			
-			Message messageEnvoye = new Message(null, Header.CODE_NATURE_TEXTE, nouveauMessage);
+			Message messageEnvoye = null;
+			
+			// s'il s'agit de la commande d'extinction du serveur
+			if(message.equals("/shutdown")){
+				messageEnvoye = new Message(null, Header.CODE_NATURE_EXTINCTION_SERVEUR, "-1");
+			}
+			
+			// sinon il s'agit d'un message
+			else{
+				messageEnvoye = new Message(null, Header.CODE_NATURE_TEXTE, nouveauMessage);
+			}
 			
 			// envoi du message
 			envoyerMessage(messageEnvoye);
