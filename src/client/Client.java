@@ -226,6 +226,11 @@ public class Client {
 						
 						Message messageRecu = new Message(test);
 						
+						if(messageRecu.getField(Header.NATURE).equals("" + Header.CODE_NATURE_TEXTE_INFO)){
+							ChatPanel.getMessageFromClient(Header.CODE_NATURE_TEXTE_INFO, messageRecu.getField(Header.DONNEES) + "\n");
+							System.out.println(messageRecu.getField(Header.DONNEES));
+						}
+						
 						if(messageRecu.getField(Header.NATURE).equals("" + Header.CODE_NATURE_TEXTE)){
 							ChatPanel.getMessageFromClient(Header.CODE_NATURE_TEXTE, messageRecu.getField(Header.DONNEES) + "\n");
 							System.out.println(messageRecu.getField(Header.DONNEES));

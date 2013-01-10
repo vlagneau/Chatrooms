@@ -43,6 +43,12 @@ public class Chatroom implements Serializable{
 	 */
 	public void connexion(Session session){
 		if(!_sessions.contains(session)){
+			// création du message de connexion dans la chatroom
+			String pseudoConnecte = session.get_chatter().getPseudo();
+			Message messageEnvoye = new Message(Header.IDENTIFIANT_SERVEUR, Header.CODE_NATURE_TEXTE_INFO, pseudoConnecte + " vient de se connecter à la chatroom");
+			envoyerMessageATous(messageEnvoye);
+			
+			// ajout de la nouvelle session à la chatroom
 			_sessions.add(session);
 		}
 		
@@ -55,6 +61,12 @@ public class Chatroom implements Serializable{
 	 */
 	public void deconnexion(Session session){
 		if(_sessions.contains(session)){
+			// création du message de déconnexion de la chatroom
+			String pseudoConnecte = session.get_chatter().getPseudo();
+			Message messageEnvoye = new Message(Header.IDENTIFIANT_SERVEUR, Header.CODE_NATURE_TEXTE_INFO, pseudoConnecte + " vient de se déconnecter de la chatroom");
+			envoyerMessageATous(messageEnvoye);
+			
+			// retrait de la session de la chatroom
 			_sessions.remove(session);
 		}
 		
@@ -93,6 +105,10 @@ public class Chatroom implements Serializable{
 	 * qui lui sont associées
 	 */
 	public void fermetureChatroom(){
+		// création du message de fermeture de la chatroom
+		Message messageEnvoye = new Message(Header.IDENTIFIANT_SERVEUR, Header.CODE_NATURE_TEXTE_INFO_FERMETURE_CHATROOM, "La chatroom vient d'être fermée");
+		envoyerMessageATous(messageEnvoye);
+		
 		for (Iterator<Session> iteratorSession = _sessions.iterator(); iteratorSession.hasNext();) {
 			Session sessionTemp = iteratorSession.next();
 			
@@ -143,11 +159,19 @@ public class Chatroom implements Serializable{
 		Message messageEnvoye = new Message(Header.IDENTIFIANT_SERVEUR, Header.CODE_NATURE_LISTE_USERS_CHATROOMS, stringEnvoye.toString());
 		
 		// envoi du message à toutes les sessions connectées à la chatroom
+		envoyerMessageATous(messageEnvoye);
+	}
+	
+	/**
+	 * Fonction permettant d'envoyer à tous les utilisateurs connectés un message
+	 * @param messageAEnvoyer message à transmetter à tous les utilisateurs
+	 */
+	private void envoyerMessageATous(Message messageAEnvoyer){
 		for (Iterator<Session> iteratorSession = _sessions.iterator(); iteratorSession.hasNext();) {
 			Session sessionTemp = iteratorSession.next();
-			
-			sessionTemp.envoyerMessage(messageEnvoye);
-			
+
+			sessionTemp.envoyerMessage(messageAEnvoyer);
+
 		}
 	}
 }

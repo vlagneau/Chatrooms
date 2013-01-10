@@ -12,6 +12,8 @@ public class Header {
 	public static final int CODE_NATURE_IDENTIFICATION_KO = 102;
 	
 	public static final int CODE_NATURE_TEXTE = 20;
+	public static final int CODE_NATURE_TEXTE_INFO = 25;
+	public static final int CODE_NATURE_TEXTE_INFO_FERMETURE_CHATROOM = 28;
 	
 	public static final int CODE_NATURE_CONNEXION_CHATROOM = 30;
 	public static final int CODE_NATURE_CONNEXION_CHATROOM_OK = 301;
