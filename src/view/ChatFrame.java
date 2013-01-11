@@ -14,6 +14,10 @@ public class ChatFrame extends JFrame {
 	Client _client;
 	String _idRoom;
 	
+	public String getIdRoom() {
+		return _idRoom;
+	}
+	
 	public ChatFrame(Client client, String login, String room, String idRoom) {
 		this._client = client;
 		this._idRoom = idRoom;

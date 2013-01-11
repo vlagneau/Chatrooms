@@ -67,6 +67,7 @@ public class RoomPanel extends JPanel {
 	            if(!room.isEmpty() && !room.equals("Attente")) {
 		            String id = _client._rooms.get(room);
 					_client.suppressionChatroom(id);
+					//RoomFrame.FermerSalle(id);
 	            }
 			}
 			

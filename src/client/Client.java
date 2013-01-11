@@ -18,6 +18,7 @@ import message.Message;
 import server.Server;
 import view.ChatPanel;
 import view.LoginPanel;
+import view.RoomFrame;
 import view.RoomPanel;
 
 public class Client {
@@ -225,6 +226,11 @@ public class Client {
 						String test = _in.readLine();
 						
 						Message messageRecu = new Message(test);
+						
+						if(messageRecu.getField(Header.NATURE).equals("" + Header.CODE_NATURE_TEXTE_INFO_FERMETURE_CHATROOM)){
+							System.out.println(messageRecu.getField(Header.DONNEES));
+							RoomFrame.FermerSalle(messageRecu.getField(Header.DONNEES));
+						}
 						
 						if(messageRecu.getField(Header.NATURE).equals("" + Header.CODE_NATURE_TEXTE_INFO)){
 							ChatPanel.getMessageFromClient(Header.CODE_NATURE_TEXTE_INFO, messageRecu.getField(Header.DONNEES) + "\n");

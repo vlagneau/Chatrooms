@@ -10,6 +10,7 @@ import java.util.Set;
 import javax.swing.JFrame;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import client.Client;
@@ -22,7 +23,7 @@ public class RoomFrame extends JFrame {
 	JMenuItem deco;
 	JMenuItem quitter;
 	
-	public Set<JFrame> openRooms;
+	public static Set<ChatFrame> openRooms;
 	
 	
 	public RoomFrame(Client client, String login) {
@@ -52,6 +53,15 @@ public class RoomFrame extends JFrame {
 	public void FermerSalles() {
 		for(JFrame frame : openRooms) {
 			frame.dispose();
+		}
+	}
+	
+	public static void FermerSalle(String id) {
+		for(ChatFrame frame : openRooms) {
+			if(frame.getIdRoom().equals(id)) {
+				frame.dispose();
+				JOptionPane.showMessageDialog(null,"Fermeture de la chatroom","Fermeture", JOptionPane.INFORMATION_MESSAGE);
+			}
 		}
 	}
 	

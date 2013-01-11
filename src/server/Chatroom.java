@@ -106,7 +106,7 @@ public class Chatroom implements Serializable{
 	 */
 	public void fermetureChatroom(){
 		// création du message de fermeture de la chatroom
-		Message messageEnvoye = new Message(Header.IDENTIFIANT_SERVEUR, Header.CODE_NATURE_TEXTE_INFO_FERMETURE_CHATROOM, "La chatroom vient d'être fermée");
+		Message messageEnvoye = new Message(Header.IDENTIFIANT_SERVEUR, Header.CODE_NATURE_TEXTE_INFO_FERMETURE_CHATROOM, String.valueOf(_id));
 		envoyerMessageATous(messageEnvoye);
 		
 		for (Iterator<Session> iteratorSession = _sessions.iterator(); iteratorSession.hasNext();) {
