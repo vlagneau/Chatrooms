@@ -79,7 +79,7 @@ public class RoomFrame extends JFrame {
 			else {
 				_client.arreterClient();
 				FermerSalles();
-				dispose();
+				System.exit(0);
 			}
 			
 		}
