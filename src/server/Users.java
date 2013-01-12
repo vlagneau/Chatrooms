@@ -30,6 +30,19 @@ public class Users implements Serializable{
 		return _listeUsers.contains(user);
 	}
 	
+	public boolean pseudoExistant(String pseudo){
+		Boolean existe = Boolean.FALSE;
+		
+		Iterator<User> iteratorUser = _listeUsers.iterator();
+		
+		while(!existe && iteratorUser.hasNext()){
+			User userTemp = iteratorUser.next();
+			existe = userTemp.getPseudo().equals(pseudo);
+		}
+		
+		return existe;
+	}
+	
 	/**
 	 * Fonction d'affichage de la liste des users
 	 */

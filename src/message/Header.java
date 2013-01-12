@@ -5,7 +5,13 @@ public class Header {
 	public static final String DELIMITEUR_DONNES = "%";
 	public static final String DELIMITEUR_CHATROOM = "§";
 	
-	public static final int IDENTIFIANT_SERVEUR = 0;
+	public static final int IDENTIFIANT_SERVEUR = 8080;
+	
+	public static final int CODE_NATURE_EXTINCTION_SERVEUR = -1;
+	
+	public static final int IDENTIFICATEUR = 0;
+	public static final int NATURE = 1;
+	public static final int DONNEES = 2;
 	
 	public static final int CODE_NATURE_IDENTIFICATION = 10;
 	public static final int CODE_NATURE_IDENTIFICATION_OK = 101;
@@ -28,8 +34,9 @@ public class Header {
 	public static final int CODE_NATURE_DECONNEXION_SERVEUR_KO = 502;
 	
 	public static final int CODE_NATURE_LISTE_CHATROOMS = 60;
+	public static final int CODE_NATURE_LISTE_USERS_CHATROOMS = 65;
 	
-	public static final int CODE_NATURE_LISTE_USERS_CHATROOMS = 70;
+	public static final int CODE_NATURE_INSCRIPTION = 70;
 	
 	public static final int CODE_NATURE_CREATION_CHATROOM = 80;
 	public static final int CODE_NATURE_CREATION_CHATROOM_OK = 801;
@@ -38,12 +45,4 @@ public class Header {
 	public static final int CODE_NATURE_SUPPRESSION_CHATROOM = 90;
 	public static final int CODE_NATURE_SUPPRESSION_CHATROOM_OK = 901;
 	public static final int CODE_NATURE_SUPPRESSION_CHATROOM_KO = 902;
-	
-	public static final int CODE_NATURE_INSCRIPTION = 0;
-	
-	public static final int CODE_NATURE_EXTINCTION_SERVEUR = -1;
-		
-	public static final int IDENTIFICATEUR = 0;
-	public static final int NATURE = 1;
-	public static final int DONNEES = 2;
 }

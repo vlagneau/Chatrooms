@@ -133,14 +133,17 @@ public class Server {
 	}
 	
 	/**
-	 * Fonction permettant d'ajouter un user à la liste des users du serveur
+	 * Fonction permettant d'ajouter un user à la liste des users du serveur s'il n'existe
+	 * pas déjà un user avec le même
 	 * @param pseudo pseudo du user concerné
 	 * @param password mot de pase du user concerné
 	 */
 	public void addUser(String pseudo, String password){
 		User user = new User(pseudo, password);
 		
-		_users.addUser(user);
+		if(!_users.pseudoExistant(pseudo)){
+			_users.addUser(user);
+		}
 	}
 	
 	/**
