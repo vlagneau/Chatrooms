@@ -109,11 +109,7 @@ public class Chatroom implements Serializable{
 		Message messageEnvoye = new Message(Header.IDENTIFIANT_SERVEUR, Header.CODE_NATURE_TEXTE_INFO_FERMETURE_CHATROOM, String.valueOf(_id));
 		envoyerMessageATous(messageEnvoye);
 		
-		for (Iterator<Session> iteratorSession = _sessions.iterator(); iteratorSession.hasNext();) {
-			Session sessionTemp = iteratorSession.next();
-			
-			deconnexion(sessionTemp);
-		}
+		_sessions.removeAll(_sessions);
 	}
 	
 	/**
@@ -171,7 +167,6 @@ public class Chatroom implements Serializable{
 			Session sessionTemp = iteratorSession.next();
 
 			sessionTemp.envoyerMessage(messageAEnvoyer);
-
 		}
 	}
 }
